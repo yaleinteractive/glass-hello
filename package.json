@@ -1,0 +1,13 @@
+{
+  "name": "glass-hello",
+  "version": "0.0.0",
+  "description": "Hello world for Google Glass with Mirror API.",
+  "main": "server.js",
+  "repository": "",
+  "author": "Dan Michaelson <dan.michaelson@yale.edu>",
+  "dependencies": {
+    "async": "~0.2.8",
+    "express": "~3.2.4",
+    "glass-prism": "~0.3.0"
+  }
+}
