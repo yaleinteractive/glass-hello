@@ -1,23 +1,16 @@
 {
 	
-	"client_id": "611399686787-pt8oftv6amo862rqoaqlc022aibb04hb.apps.googleusercontent.com",
-	"client_secret": "wfIvsdAF-XtiA9ASU19Uz7Ge",
-	"redirect_dir": "https://glass-hello-c9-danmichaelson.c9.io/oauth2callback",
-
-	"subscription_callback": "https://glass-hello-c9-danmichaelson.c9.io/oauth2callback/subscription",
-	"subscribe": true,
-	"verify_hash": "somethingweird",
+	"host": "https://glass-hello-danmichaelson.c9.io",
 	
-	"scopes": "https://www.googleapis.com/auth/glass.timeline https://www.googleapis.com/auth/glass.location",
-
-	"hostname": "glass-hello-c9-danmichaelson.c9.io",
+	"client_id": "977698669759-9naa801veo3dflq51qrl8c7akhk9cblp.apps.googleusercontent.com",
+	"client_secret": "ls7qphjb-gSFpg0q13o-rt2p",
 
 	"contactIcon": "http://art.yale.edu/image_columns/0003/4858/20070524_010537_486.jpg",
-	"displayName": "Glass Hello",
-	"speakableName": "Glass Hello",
+	"displayName": "Glass Hello 2",
+	"id": "glasshello2",
 
-	"port": 8101,
+	"scopes": "https://www.googleapis.com/auth/glass.timeline https://www.googleapis.com/auth/glass.location",
 
-	"id": "glass-hello"
+	"subscribe": true
 
 }

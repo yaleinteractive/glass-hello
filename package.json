@@ -8,6 +8,8 @@
   "dependencies": {
     "async": "~0.2.8",
     "express": "~3.2.4",
+    "httpreq": "~0.4.2",
+    "geolib": "~2.0.0",
     "glass-prism": "git://github.com/jaxbot/glass-prism.git#69700c050bf9c8f38333fcbd625e81788d22a4cc"
   }
 }
