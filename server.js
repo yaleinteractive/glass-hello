@@ -84,14 +84,14 @@ function onSubscription(err, payload) {
     // See what the user did:
     
     // Automatic location update
-    if (payload.collection == 'locations') {
+    if (payload.data.collection == 'locations') {
         console.log("Automatic location update");
         // We still need to explicitly get the location. updateCard does that before updating the card.
         updateCard(payload.data.token);
     }
     
     // Something more explicit
-	if (payload.data.userActions) {
+	else if (payload.data.userActions) {
 	    
 	    for (var i = 0; i < payload.data.userActions.length; i++) {
 	        var action = payload.data.userActions[i];
