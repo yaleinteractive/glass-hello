@@ -1,2 +1,4 @@
 .c9/
 .clienttokens.json
+data/*
+!data/.keep
