@@ -228,14 +228,55 @@ function getLocation(tokens, callback) {
 
                 console.log("Got location", data.latitude, data.longitude);
 
-                // Note the tokens in the data structure for future use, and for searching the database
-                data.tokens = tokens;
+                // Store the location in the database (this is non-blocking, callback below will happen simultaneously)
+                if (db) {
+                    // We use a special format for the location (GeoJSON) that allows geospatial querying in Mongo
+                    db.collection('locations').insert({
+                        loc: {type: "Point", coordinates: [data.longitude, data.latitude]},
+                        timestamp: data.timestamp,
+                        tokens: tokens
+                    }, function(err, result) {
+                        if (err) {
+                            console.log("Error inserting location into database", err);
+                        }
+                        else {
+                            // Make sure there is an index to support geospatial querying, also scoped to an individual Glass client for speed
+                            db.collection('locations').ensureIndex({loc: '2dsphere', tokens: 1}, function() {
+                                
+                                // See how many past results are within 100 meters of this one
+                                
+                                db.collection('locations').find(
+                                    {
+                                        loc: {
+                                            $nearSphere: {
+                                                $geometry: {
+                                                    type: 'Point',
+                                                    coordinates: [data.longitude, data.latitude]
+                                                }, 
+                                                $maxDistance: 100
+                                            }
+                                        },
+                                        tokens: tokens
+                                    }, 
+                                    {loc: true, timestamp: true}
+                                ).count(function(err, result) {
+                                    if (err) {
+                                        console.log("Error getting previous locations");
+                                    }
+                                    else {
+                                        console.log((result - 1) + " previous reports for this client within 100 meters of this location");
+                                    }
+                                });
+
+                            });
+
+                            
+                        }
+                    });
+                }
                 
-                // Store the location in the database
-                if (db) db.collection('locations').insert(data);
-                
-                // Example to query the locations database:
-                // db.locations.find({tokens: tokens}, {latitude: true, longitude: true, timestamp: true})
+                // Simple example to query the locations database:
+                // db.locations.find({tokens: tokens}, {loc: true, timestamp: true})
                 
             }
             callback(null, data);
