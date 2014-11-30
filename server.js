@@ -42,13 +42,14 @@ MongoClient.connect(mongo_url, function(err, connected_db) {
     prism.init(config, function(err) {
         console.log('Ready!', err);
         
+        // Subscribe to automatic location updates for all existing clients
+        subscribeToLocationForAllGlasses();
+        
         // Update the card on all existing clients (Prism loads existing clients from .clienttokens.json)
     	updateCardForAllGlasses();
     	
         // We could add setInterval(updateCardForAllGlasses, 10 * 60 * 1000) to send updates automatically every 10 minutes
-        
-        // TODO: Also subscribe to automatic location updates
-        
+
     });
     
 });
@@ -61,27 +62,42 @@ prism.on('subscription', onSubscription);
 function onNewClient(tokens) {
     console.log('New client');
     
+    // Subscribe to automatic location updates
+    subscribeToLocation(tokens);
+    
     // Update the card for a new client
 	updateCard(tokens);
 	
-    // TODO: Also subscribe to automatic location updates
     
-};
+}
 
-// This is called when a user presses one of the buttons in our card; shares something with our contact;
-// deletes or pins our card; and (if we've subscribed to location updates) every 10 minutes with latest location
+// This is called when a user presses one of the custom menu items in our card; replies with a voice transcription;
+// deletes or pins our card; shares something with our contact; launches our app with a voice command;
+// and (if we've subscribed to location updates) every 10 minutes with latest location.
+// See https://developers.google.com/glass/develop/mirror/static-cards#subscriptions for all the subscription types
+// and corresponding payload formats.
 function onSubscription(err, payload) {
     console.log("Subscription", payload);
     
-    // payload.item (e.g. payload.item.text) and payload.data.token are also available
+    // payload.item (e.g. payload.item.text) is also available
     
-    // See what the user did
+    // See what the user did:
+    
+    // Automatic location update
+    if (payload.collection == 'locations') {
+        console.log("Automatic location update");
+        // We still need to explicitly get the location. updateCard does that before updating the card.
+        updateCard(payload.data.token);
+    }
+    
+    // Something more explicit
 	if (payload.data.userActions) {
+	    
 	    for (var i = 0; i < payload.data.userActions.length; i++) {
 	        var action = payload.data.userActions[i];
 	        
-	        // Pressed a custom button
-	        if (action.type == 'CUSTOM' && action.payload == 'update') { // Where 'update' is the id you gave to your custom button
+	        // Pressed a custom menu item
+	        if (action.type == 'CUSTOM' && action.payload == 'update') { // Where 'update' is the id you gave to your custom menu item
 	            console.log("User pressed Update");
 	            updateCard(payload.data.token);
 	        }
@@ -89,16 +105,15 @@ function onSubscription(err, payload) {
 	        // Shared something with our contact
 	        else if (action.type == 'SHARE' && payload.data.collection == 'timeline') {
 	            console.log("User shared a timeline item");
-	            var itemId = payload.data.itemId;
 	            getSharedImage(payload.data.itemId, payload.data.token);
 	        }
 	        
-	        // else if... for other buttons
+	        // else if... for other menu items
 	        
 	    }
 	}
-	
-};
+
+}
 
 // Update or insert the card for all clients
 function updateCardForAllGlasses() {
@@ -152,10 +167,10 @@ function updateCard(tokens) {
     	        },
     	        {
                     action: "CUSTOM",
-                    id: "update", // This id for your button can be any string you want
+                    id: "update", // This id for your menu item can be any string you want
                     values: [{
                         displayName: "Update"
-                        // iconUrl: "http://example.com/icons/complete.png" to define a custom icon for your button
+                        // iconUrl: "http://example.com/icons/complete.png" to define a custom icon for your menu item
                         //   50x50 PNG Google recommends white with transparent background
                     }]
     	        },
@@ -172,10 +187,30 @@ function updateCard(tokens) {
     	            values: [{
     	                displayName: "Art 752a"
     	            }]
-                } // , { ... }... for additional buttons
+                } // , { ... }... for additional menu items
             ]
     	}, tokens);
     });
+}
+
+function subscribeToLocationForAllGlasses() {
+    for (var i = 0; i < prism.client_tokens().length; i++) {
+        subscribeToLocation(prism.client_tokens()[i]);
+    }
+}
+
+// Subscribe to location updates
+// tokens represents an individual Glass
+function subscribeToLocation(tokens) {
+ 	prism.mirrorCall(prism.mirror.subscriptions.insert({
+		"callbackUrl": config.subscription_callback,
+		"collection": "locations",
+		"operation": [], // empty set = all
+		"userToken": prism.client_tokens().indexOf(tokens),
+		"verifyToken": config.verify_hash
+	}), tokens, function(err) {
+	    if (err) console.log("Error subscribing to location updates", err);
+	});
 }
 
 // Get the location for one client
