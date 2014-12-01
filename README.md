@@ -16,8 +16,8 @@ but replace glass-hello with your Cloud9 project name (usually your GitHub repo 
   14. Click Create new Client ID
   15. Select Web application and click Configure consent screen
   16. Select your email address, enter our project title under Product Name, and click Save
-  17. Back under Create Client ID: Under Authorized JavaScript origins, add two lines: 
-    i. The “host” from step 2. 
+  17. Back under Create Client ID: Under Authorized JavaScript origins, add two lines:  
+    i. The “host” from step 2.  
     ii. https://mirror-api-playground.appspot.com
   18. Under Authorized Redirect URIs, make sure that the following was automatically added:
 https://glass-hello-danmichaelson.c9.io/oauth2callback
