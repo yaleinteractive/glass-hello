@@ -77,21 +77,21 @@ function onNewClient(tokens) {
 // See https://developers.google.com/glass/develop/mirror/static-cards#subscriptions for all the subscription types
 // and corresponding payload formats.
 function onSubscription(err, payload) {
-    console.log("Subscription", payload);
+    // console.log("Subscription", payload);
     
     // payload.item (e.g. payload.item.text) is also available
     
     // See what the user did:
     
     // Automatic location update
-    if (payload.collection == 'locations') {
+    if (payload.data.collection == 'locations') {
         console.log("Automatic location update");
         // We still need to explicitly get the location. updateCard does that before updating the card.
         updateCard(payload.data.token);
     }
     
     // Something more explicit
-	if (payload.data.userActions) {
+	else if (payload.data.userActions) {
 	    
 	    for (var i = 0; i < payload.data.userActions.length; i++) {
 	        var action = payload.data.userActions[i];
@@ -147,7 +147,7 @@ function updateCard(tokens) {
             })
         }
         else {
-            html = prism.cards.hello({
+            html = prism.cards.other({
                 image: "http://art.yale.edu/image_columns/0003/4858/20070524_010537_486.jpg",
                 latitude: lat,
                 longitude: lon,
@@ -222,64 +222,74 @@ function getLocation(tokens, callback) {
         if (err) {
             console.log("Location error", err);
             callback(err);
+            return;
         }
-        else {
-            if (data) {
+        if (!data) {
+            console.log("Could not get location data");
+            callback(true);
+            return;
+        }
 
-                console.log("Got location", data.latitude, data.longitude);
+        console.log("Got location", data.latitude, data.longitude);
 
-                // Store the location in the database (this is non-blocking, callback below will happen simultaneously)
-                if (db) {
-                    // We use a special format for the location (GeoJSON) that allows geospatial querying in Mongo
-                    db.collection('locations').insert({
-                        loc: {type: "Point", coordinates: [data.longitude, data.latitude]},
-                        timestamp: data.timestamp,
-                        tokens: tokens
-                    }, function(err, result) {
-                        if (err) {
-                            console.log("Error inserting location into database", err);
-                        }
-                        else {
-                            // Make sure there is an index to support geospatial querying, also scoped to an individual Glass client for speed
-                            db.collection('locations').ensureIndex({loc: '2dsphere', tokens: 1}, function() {
-                                
-                                // See how many past results are within 100 meters of this one
-                                
-                                db.collection('locations').find(
-                                    {
-                                        loc: {
-                                            $nearSphere: {
-                                                $geometry: {
-                                                    type: 'Point',
-                                                    coordinates: [data.longitude, data.latitude]
-                                                }, 
-                                                $maxDistance: 100
-                                            }
-                                        },
-                                        tokens: tokens
-                                    }, 
-                                    {loc: true, timestamp: true}
-                                ).count(function(err, result) {
-                                    if (err) {
-                                        console.log("Error getting previous locations");
-                                    }
-                                    else {
-                                        console.log((result - 1) + " previous reports for this client within 100 meters of this location");
-                                    }
-                                });
-
-                            });
-
-                            
-                        }
-                    });
+        // Store the location in the database (this is non-blocking, callback below will happen simultaneously)
+        if (db) {
+            
+            // We use a special format for the location (GeoJSON) that allows geospatial querying in Mongo
+            db.collection('locations').insert({
+                loc: {type: "Point", coordinates: [data.longitude, data.latitude]},
+                timestamp: data.timestamp,
+                tokens: tokens
+            }, function(err, result) {
+                if (err) {
+                    console.log("Error inserting location into database", err);
+                    callback(err);
+                    return;
                 }
                 
-                // Simple example to query the locations database:
-                // db.locations.find({tokens: tokens}, {loc: true, timestamp: true})
-                
-            }
-            callback(null, data);
+                // Make sure there is an index to support geospatial querying, also scoped to an individual Glass client for speed
+                db.collection('locations').ensureIndex({loc: '2dsphere', tokens: 1}, function(err) {
+                    if (err) {
+                        console.log("Could not create database index", err);
+                        callback(err);
+                        return;
+                    }
+
+                    // See how many past results are within 100 meters of this one
+                    
+                    db.collection('locations').find(
+                        {
+                            loc: {
+                                $nearSphere: {
+                                    $geometry: {
+                                        type: 'Point',
+                                        coordinates: [data.longitude, data.latitude]
+                                    }, 
+                                    $maxDistance: 100
+                                }
+                            },
+                            tokens: tokens
+                        }, 
+                        {loc: true, timestamp: true}
+                    ).count(function(err, result) {
+                        if (err) {
+                            console.log("Error getting previous locations");
+                            callback(err);
+                            return;
+                        }
+
+                        console.log((result - 1) + " previous reports for this client within 100 meters of this location");
+                        data.total_visits = result;
+                        // Call back with the location data including total number of previous visits by this client
+                        callback(data);
+                        
+                    });
+                });
+            });
+        }
+        else {
+            // In case there's no db available, just call back with the location data
+            callback(data);
         }
     });
 }
