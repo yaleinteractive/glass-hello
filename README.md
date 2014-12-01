@@ -5,6 +5,7 @@ but replace glass-hello with your Cloud9 project name (usually your GitHub repo 
   3. Update the “displayName” to the name of your project.
   4. Update the “id” to the name of your project in all lowercase with no punctuation.
   5. Optionally update the “contactIcon” to the URL of an image (the user sees this when she shares to your project).
+  6. Open package.json and update the name or your app, description of your app, and your email address.
   6. Go to https://console.developers.google.com/project
   7. Log in as your own Gmail address
   8. Create a project. Name it the title of your class project.
@@ -34,6 +35,8 @@ If not, carefully add it yourself.
 
 In the output for server.js, you should notice that the card was updated. You can see the card in the Google Glass, and you can also see it in the Playground.
 
-To see the card in the Playground, go to https://developers.google.com/glass/tools-downloads/playground . Enter the Client ID next to Authorize and click Authorize. Be sure to log in as yaleinteractive@gmail.com .
+To see the card in the Playground, go to https://developers.google.com/glass/tools-downloads/playground . Paste the Client ID next to Authorize and click Authorize. Be sure to log in as yaleinteractive@gmail.com .
 
-Then find the card under the Timeline tab. Note that clicking "Update" does not refresh the card from your timeline. Instead it pushes the card (with any HTML you've edited in the Playground) back to your timeline. To refresh _from_ your timeline, reload the Playground page and authorize again.
+Then find the card from your app under the Timeline tab. Note that clicking "Update" does not refresh the card from your timeline. Instead it pushes the card (with any HTML you've edited in the Playground) back to your timeline. To refresh _from_ your timeline, reload the Playground page and authorize again.
+
+Unfortunately the Playground does not fully support menu items in cards; for these you have to use the Glass itself.
