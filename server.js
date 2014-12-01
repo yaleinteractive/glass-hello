@@ -132,21 +132,30 @@ function updateCard(tokens) {
         var lat, lon, distance, html;
         
         // Generate the HTML for the card
-        var image = "http://art.yale.edu/image_columns/0003/4858/20070524_010537_486.jpg";
+        
         if (location) {
             lat = location.latitude;
             lon = location.longitude;
             
             // Get the distance from Green Hall in meters
             distance = geolib.getDistance(location, {latitude: 41.308317, longitude: -72.932979});
+            if (distance != undefined && distance < 500) {
+                html = prism.cards.grn({
+                    timestamp: new Date()
+                })
+            }
+
+            // Get the distance from Sterling Library in meters
+            distance = geolib.getDistance(location, {latitude: 41.31129, longitude: -72.928775});
+            if (distance != undefined && distance < 500) {
+                html = prism.cards.sml({
+                    timestamp: new Date()
+                })
+            }
 
         }
-        if (distance != undefined && distance < 500) {
-            html = prism.cards.grn({
-                timestamp: new Date()
-            })
-        }
-        else {
+        
+        if (html == undefined) {
             html = prism.cards.other({
                 image: "http://art.yale.edu/image_columns/0003/4858/20070524_010537_486.jpg",
                 latitude: lat,
